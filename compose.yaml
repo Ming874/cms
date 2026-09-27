@@ -1,0 +1,90 @@
+# CMS（IOI Contest Management System）Docker Compose 部署
+#
+# 第一次使用：
+#   Windows：  .\cms.ps1 init   然後   .\cms.ps1 up
+#   Linux：    ./cms.sh init    然後   ./cms.sh up
+# 所有可調參數都在 .env（由 .env.example 產生）。
+
+name: ${COMPOSE_PROJECT_NAME:-cms}
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
+services:
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:16-bookworm}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${CMS_DB_USER:-cmsuser}
+      POSTGRES_PASSWORD: ${CMS_DB_PASSWORD:?請先執行 init 產生 .env}
+      POSTGRES_DB: ${CMS_DB_NAME:-cmsdb}
+      TZ: ${TZ:-Asia/Taipei}
+    command:
+      - postgres
+      - -c
+      - max_connections=${POSTGRES_MAX_CONNECTIONS:-300}
+      - -c
+      - shared_buffers=${POSTGRES_SHARED_BUFFERS:-256MB}
+    shm_size: 256mb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    logging: *default-logging
+
+  cms:
+    build:
+      context: ./docker
+      args:
+        CMS_REF: ${CMS_REF:-v1.5.1}
+        CMS_COMMIT: ${CMS_COMMIT-7c9fec8aa1a25ec93d624aebf815804dd93df9db}
+        JDK_PACKAGE: ${JDK_PACKAGE:-openjdk-11-jdk-headless}
+        EXTRA_LANGS: ${EXTRA_LANGS:-false}
+    image: ${CMS_IMAGE:-cms-local:v1.5.1}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # isolate 沙箱需要建立 namespace、掛載檔案系統並管理 cgroup
+    privileged: true
+    # 私有 cgroup namespace：isolate 只在容器自己的 cgroup 子樹內運作
+    cgroup: private
+    environment:
+      TZ: ${TZ:-Asia/Taipei}
+      CMS_DB_HOST: db
+      CMS_DB_USER: ${CMS_DB_USER:-cmsuser}
+      CMS_DB_PASSWORD: ${CMS_DB_PASSWORD}
+      CMS_DB_NAME: ${CMS_DB_NAME:-cmsdb}
+      CMS_SECRET_KEY: ${CMS_SECRET_KEY:-}
+      CMS_ADMIN_USERNAME: ${CMS_ADMIN_USERNAME:-admin}
+      CMS_ADMIN_PASSWORD: ${CMS_ADMIN_PASSWORD:-}
+      CMS_CONTEST_ID: ${CMS_CONTEST_ID:-ALL}
+      CMS_WORKERS: ${CMS_WORKERS:-4}
+      CMS_NUM_PROXIES: ${CMS_NUM_PROXIES:-0}
+      CMS_RANKING: ${CMS_RANKING:-false}
+      CMS_RANKING_USERNAME: ${CMS_RANKING_USERNAME:-ranking}
+      CMS_RANKING_PASSWORD: ${CMS_RANKING_PASSWORD:?請先執行 init 產生 .env}
+      CMS_LOG_RETENTION_DAYS: ${CMS_LOG_RETENTION_DAYS:-30}
+    ports:
+      - "${CWS_BIND:-0.0.0.0}:${CWS_PORT:-8888}:8888"
+      - "${AWS_BIND:-127.0.0.1}:${AWS_PORT:-8889}:8889"
+      - "${RWS_BIND:-0.0.0.0}:${RWS_PORT:-8890}:8890"
+    volumes:
+      - cms-data:/var/local/lib/cms
+      - cms-log:/var/local/log/cms
+      - ./backups:/backups
+      - ./config:/etc/cms-docker:ro
+    stop_grace_period: 40s
+    logging: *default-logging
+
+volumes:
+  pgdata:
+  cms-data:
+  cms-log:

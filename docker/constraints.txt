@@ -1,0 +1,42 @@
+# Python 套件版本鎖定檔（pip constraints）
+# 由已驗證的建置結果 `pip freeze` 產生（CMS v1.5.1 / Python 3.12 / Ubuntu 24.04，2026-09-24）。
+# 重建映像時會使用完全相同的版本。更新方式見 README「升級與重新鎖定版本」。
+anyio==4.15.1
+Babel==2.12.1
+backports.ssl_match_hostname==3.7.0.1
+bcrypt==4.3.0
+beautifulsoup4==4.13.5
+certifi==2026.7.22
+chardet==5.2.0
+charset-normalizer==3.5.1
+gevent==25.5.1
+greenlet==3.5.6
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.20
+Jinja2==2.10.3
+MarkupSafe==2.0.1
+netifaces==0.11.0
+packaging==26.3
+patool==4.0.7
+prometheus_client==0.21.1
+psutil==7.0.0
+psycopg2==2.9.10
+pycryptodomex==3.23.0
+pycups==2.0.4
+PyPDF2==3.0.1
+python-telegram-bot==21.11.1
+pyxdg==0.28
+PyYAML==6.0.3
+requests==2.32.3
+setuptools==69.5.1
+soupsieve==2.10
+SQLAlchemy==1.3.24
+tornado==4.5.3
+typing_extensions==4.16.0
+urllib3==2.8.0
+Werkzeug==0.16.1
+wheel==0.48.0
+zope.event==6.2
+zope.interface==8.6

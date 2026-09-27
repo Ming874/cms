@@ -1,0 +1,6 @@
+# 含密碼，不要提交
+.env
+# 資料庫備份與匯出的映像檔
+backups/*
+!backups/.gitkeep
+*.tar

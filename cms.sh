@@ -84,8 +84,8 @@ case "$cmd" in
         docker compose exec -T db dropdb -U "$(db_user)" --if-exists "$testdb"
         docker compose exec -T db createdb -U "$(db_user)" -O "$(db_user)" "$testdb"
         rc=0
-        docker compose run --rm --no-deps -T -e CMS_DB_NAME="$testdb" -e CMS_ADMIN_PASSWORD= \
-            cms cms-fulltest ${1:+"$*"} || rc=$?
+        # fulltest 服務不掛載正式資料的 volume（見 compose.yaml）
+        docker compose run --rm -T fulltest cms-fulltest ${1:+"$*"} || rc=$?
         docker compose exec -T db dropdb -U "$(db_user)" --if-exists "$testdb"
         exit $rc
         ;;

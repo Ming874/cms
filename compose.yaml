@@ -84,6 +84,26 @@ services:
     stop_grace_period: 40s
     logging: *default-logging
 
+  # 官方功能測試專用（cms.cmd fulltest 會呼叫）：平常不會啟動；
+  # 不掛載任何 volume，測試產生的排名、提交檔案會隨容器一起刪除，不會混進正式資料
+  fulltest:
+    profiles: ["test"]
+    image: ${CMS_IMAGE:-cms-local:v1.5.1}
+    privileged: true
+    cgroup: private
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TZ: ${TZ:-Asia/Taipei}
+      CMS_DB_HOST: db
+      CMS_DB_USER: ${CMS_DB_USER:-cmsuser}
+      CMS_DB_PASSWORD: ${CMS_DB_PASSWORD}
+      CMS_DB_NAME: cmsdb_fulltest
+      CMS_RANKING_PASSWORD: fulltest-only
+    command: ["cms-fulltest"]
+    logging: *default-logging
+
 volumes:
   pgdata:
   cms-data:

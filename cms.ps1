@@ -118,7 +118,8 @@ switch ($Command) {
         $testdb = "cmsdb_fulltest"
         Invoke-Compose exec -T db dropdb -U $user --if-exists $testdb
         Invoke-Compose exec -T db createdb -U $user -O $user $testdb
-        $testArgs = @("run", "--rm", "--no-deps", "-T", "-e", "CMS_DB_NAME=$testdb", "-e", "CMS_ADMIN_PASSWORD=", "cms", "cms-fulltest")
+        # fulltest 服務不掛載正式資料的 volume（見 compose.yaml）
+        $testArgs = @("run", "--rm", "-T", "fulltest", "cms-fulltest")
         if ($Rest) { $testArgs += ($Rest -join " ") }
         & docker compose @testArgs
         $code = $LASTEXITCODE
